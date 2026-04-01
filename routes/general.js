@@ -1,3 +1,4 @@
+const axios = require('axios');
 const express = require('express');
 const router = express.Router();
 
@@ -82,13 +83,30 @@ router.get('/books/isbn/:isbn', async (req, res) => {
 
 // Get books by author
 router.get('/books/author/:author', async (req, res) => {
-  const author = req.params.author.toLowerCase();
+  try {
+    const author = req.params.author.toLowerCase();
 
-  const result = Object.values(books).filter(
-    book => book.author.toLowerCase() === author
-  );
+    const response = await axios.get('http://localhost:3000/books');
+    const allBooks = Object.values(response.data);
 
-  res.json(result);
+    const result = allBooks.filter(
+      book => book.author.toLowerCase() === author
+    );
+
+    if (result.length === 0) {
+      return res.status(404).json({
+        message: `No books found for author: ${req.params.author}`
+      });
+    }
+
+    res.json(result);
+
+  } catch (error) {
+    res.status(500).json({
+      message: 'Error fetching books',
+      error: error.message
+    });
+  }
 });
 
 // Get books by title

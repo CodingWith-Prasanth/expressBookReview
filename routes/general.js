@@ -111,15 +111,31 @@ router.get('/books/author/:author', async (req, res) => {
 
 // Get books by title
 router.get('/books/title/:title', async (req, res) => {
-  const title = req.params.title.toLowerCase();
+  try {
+    const title = req.params.title.toLowerCase();
 
-  const result = Object.values(books).filter(
-    book => book.title.toLowerCase() === title
-  );
+    const response = await axios.get('http://localhost:3000/books');
+    const allBooks = Object.values(response.data);
 
-  res.json(result);
+    const result = allBooks.filter(
+      book => book.title.toLowerCase() === title
+    );
+
+    if (result.length === 0) {
+      return res.status(404).json({
+        message: `No books found with title: ${req.params.title}`
+      });
+    }
+
+    res.json(result);
+
+  } catch (error) {
+    res.status(500).json({
+      message: 'Error fetching books',
+      error: error.message
+    });
+  }
 });
-
 // Get book reviews
 router.get('/books/review/:isbn', async (req, res) => {
   const book = books[req.params.isbn];
